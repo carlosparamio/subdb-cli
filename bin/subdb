@@ -1,0 +1,36 @@
+#!/usr/bin/env ruby
+
+require "bundler/setup"
+require "subdb/cli"
+require "optparse"
+
+ARGV << '-h' if ARGV[0].nil?
+
+options = {
+  language: "en"
+}
+
+OptionParser.new do |opts|
+  opts.banner = "Usage: subdb [options] file_path"
+
+  opts.on("-l", "--language LANG", "Select language to download (default: en)") do |language|
+    options[:language] = language
+  end
+
+  opts.on_tail("-h", "--help", "Show this message") do
+    puts opts
+    exit
+  end
+end.parse!
+
+begin
+  Subdb::Cli.new.download(ARGV[0], options[:language])
+rescue Subdb::Cli::FileNotFound
+  puts "File not found"
+  exit
+rescue Subdb::Cli::SubtitlesNotFound
+  puts "Subtitles file not found at Subdb database for the given language"
+  exit
+end
+
+puts "Subtitles file downloaded"
