@@ -5,6 +5,7 @@ Library and client to download subtitles from http://thesubdb.com.
 ## Usage
 
 subdb [file]
+
 subdb [file] -l [lang]
 
 ## Contributing
