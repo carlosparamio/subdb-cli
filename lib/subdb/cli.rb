@@ -57,7 +57,7 @@ module Subdb
     end
 
     def user_agent
-      "SubDB/1.0 (subdb-cli/0.1; https://github.com/carlosparamio/subdb-cli)"
+      "SubDB/1.0 (subdb-cli/#{VERSION}; https://github.com/carlosparamio/subdb-cli)"
     end
 
   end
