@@ -8,8 +8,9 @@ module Subdb
     BASE_URL = 'http://api.thesubdb.com/'
     READSIZE = 64 * 1024
 
-    FileNotFound      = Class.new(StandardError)
-    SubtitlesNotFound = Class.new(StandardError)
+    FileNotFound        = Class.new(StandardError)
+    SubtitlesNotFound   = Class.new(StandardError)
+    SubtitleUploadError = Class.new(StandardError)
 
     def download(file_path, language)
       response = client.get('/', {
@@ -23,6 +24,18 @@ module Subdb
       File.open(srt_file_for(file_path), "w") do |file|
         file.write(response.body)
       end
+    end
+
+
+    def upload(video_file_path, subtitles_file_path)
+      response = client.post('/', {
+        action: 'upload',
+        hash: hash_for(video_file_path)
+      }) do |request|
+        request.body = File.read(subtitles_file_path)
+      end
+
+      raise SubtitleUploadError unless response.status == 200
     end
 
   private

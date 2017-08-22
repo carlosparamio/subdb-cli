@@ -2,35 +2,44 @@
 
 require "bundler/setup"
 require "subdb/cli"
-require "optparse"
 
-ARGV << '-h' if ARGV[0].nil?
+def display_help
+  puts <<-USAGE
+  Usage:
+    subdb download [video_file_path] [languages]
+    subdb upload [video_file_path] [subtitles_file_path]
 
-options = {
-  language: "en"
-}
-
-OptionParser.new do |opts|
-  opts.banner = "Usage: subdb [options] file_path"
-
-  opts.on("-l", "--language LANG", "Select language to download (default: en)") do |language|
-    options[:language] = language
-  end
-
-  opts.on_tail("-h", "--help", "Show this message") do
-    puts opts
-    exit
-  end
-end.parse!
-
-begin
-  Subdb::Cli.new.download(ARGV[0], options[:language])
-rescue Subdb::Cli::FileNotFound
-  puts "File not found"
-  exit
-rescue Subdb::Cli::SubtitlesNotFound
-  puts "Subtitles file not found at Subdb database for the given language"
-  exit
+    [languages] is a comma separated list of desired languages in priority order to download (default: en)
+  USAGE
 end
 
-puts "Subtitles file downloaded"
+action = ARGV[0]
+
+begin
+  case action
+  when "download"
+    video_file_path = ARGV[1]
+    languages       = ARGV[2] || "en"
+
+    display_help && exit if video_file_path.nil?
+
+    Subdb::Cli.new.download(video_file_path, languages)
+    puts "Subtitles file downloaded."
+  when "upload"
+    video_file_path     = ARGV[1]
+    subtitles_file_path = ARGV[2]
+
+    display_help && exit if video_file_path.nil? || subtitles_file_path.nil?
+
+    Subdb::Cli.new.upload(video_file_path, subtitles_file_path)
+    puts "Subtitles file uploaded."
+  else
+    display_help
+  end
+rescue Subdb::Cli::FileNotFound
+  puts "File not found"
+rescue Subdb::Cli::SubtitlesNotFound
+  puts "Subtitles file not found at Subdb database for the given language."
+rescue SubtitleUploadError
+  puts "There was a problem uploading the subtitles file."
+end
