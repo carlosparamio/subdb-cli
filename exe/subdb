@@ -44,6 +44,6 @@ rescue Subdb::Cli::ErrorCalculatingHash
   puts "Error calculating hash for video file"
 rescue Subdb::Cli::SubtitlesNotFound
   puts "Subtitles file not found at Subdb database for the given language."
-rescue SubtitleUploadError
+rescue Subdb::Cli::SubtitleUploadError
   puts "There was a problem uploading the subtitles file."
 end
