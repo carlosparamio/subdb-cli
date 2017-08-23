@@ -8,32 +8,36 @@ module Subdb
     BASE_URL = 'http://api.thesubdb.com/'
     READSIZE = 64 * 1024
 
-    FileNotFound        = Class.new(StandardError)
-    SubtitlesNotFound   = Class.new(StandardError)
-    SubtitleUploadError = Class.new(StandardError)
+    FileNotFound         = Class.new(StandardError)
+    ErrorCalculatingHash = Class.new(StandardError)
+    SubtitlesNotFound    = Class.new(StandardError)
+    SubtitleUploadError  = Class.new(StandardError)
 
-    def download(file_path, language)
+    def download(video_file_path, language)
+      raise FileNotFound unless File.exists?(video_file_path)
+
       response = client.get('/', {
         action: 'download',
         language: language,
-        hash: hash_for(file_path)
+        hash: hash_for(video_file_path)
       })
 
       raise SubtitleNotFound unless response.status == 200
 
-      File.open(srt_file_for(file_path), "w") do |file|
-        file.write(response.body)
+      File.open(srt_file_for(video_file_path), "w") do |srt_file|
+        srt_file.write(response.body)
       end
     end
 
 
     def upload(video_file_path, subtitles_file_path)
-      response = client.post('/', {
-        action: 'upload',
-        hash: hash_for(video_file_path)
-      }) do |request|
-        request.body = File.read(subtitles_file_path)
-      end
+      raise FileNotFound unless File.exists?(video_file_path)
+      raise FileNotFound unless File.exists?(subtitles_file_path)
+
+      response = client.post('/?action=upload', {
+        hash: hash_for(video_file_path),
+        file: Faraday::UploadIO.new(subtitles_file_path, 'application/octet-stream')
+      })
 
       raise SubtitleUploadError unless response.status == 200
     end
@@ -47,14 +51,14 @@ module Subdb
     end
 
     def hash_for(file_path)
-      file    = File.open(file_path)
+      file    = File.open(file_path, "r")
       buffer  = file.read(READSIZE)
       file.seek(-READSIZE, IO::SEEK_END)
       buffer += file.read(READSIZE)
       file.close
       md5_for(buffer)
-    rescue Errno::ENOENT
-      raise FileNotFound
+    rescue
+      raise ErrorCalculatingHash
     end
 
     def md5_for(buffer)
