@@ -4,13 +4,15 @@ require "bundler/setup"
 require "subdb/cli"
 
 def display_help
-  puts <<-USAGE
+  puts <<-HELP
+  subdb-cli v#{Subdb::Cli::VERSION}
+
   Usage:
     subdb download [video_file_path] [languages]
     subdb upload [video_file_path] [subtitles_file_path]
 
     [languages] is a comma separated list of desired languages in priority order to download (default: en)
-  USAGE
+  HELP
 end
 
 action = ARGV[0]
